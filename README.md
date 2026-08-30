@@ -12,8 +12,3 @@ Arquitectura en cuatro capas: Presentación → Aplicación → Dominio → Infr
 - Backend: Node.js + Express (API REST)
 - Base de datos: PostgreSQL
 - Autenticación: JWT
-
-## Equipo
-- (Integrante 1)
-- (Integrante 2)
-- (Integrante 3)
