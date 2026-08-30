@@ -1,0 +1,1 @@
+// Implementa IVentaRepository sobre PostgreSQL
