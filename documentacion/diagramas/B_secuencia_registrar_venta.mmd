@@ -1,0 +1,43 @@
+sequenceDiagram
+  autonumber
+  actor U as Vendedor
+  participant UI as POS.jsx
+  participant RT as ventas.routes
+  participant S as ServicioVenta
+  participant R as ReglasVenta
+  participant PR as ProductoRepository
+  participant V as Venta (Dominio)
+  participant VR as VentaRepository
+  participant DB as PostgreSQL
+  participant N as INotificacionService
+
+  U->>UI: Elige productos y cantidades
+  UI->>RT: POST /api/ventas { items }
+  Note over RT: middleware valida el token JWT
+  RT->>S: registrarVenta(usuarioId, cuerpo)
+  S->>R: consolidarItems(items)
+  R-->>S: ítems válidos y sin repetidos
+  S->>PR: obtenerPorIds(ids)
+  PR->>DB: SELECT ... FROM productos WHERE id IN (...)
+  DB-->>PR: filas
+  PR-->>S: Producto[]
+  S->>V: Venta.crear(usuarioId, líneas)
+  Note over V: ReglasStock y ReglasVenta validan y calculan
+  V-->>S: Venta
+  S->>VR: registrar(venta)
+  VR->>DB: BEGIN
+  VR->>DB: INSERT INTO ventas
+  loop por cada detalle
+    VR->>DB: UPDATE productos SET stock = stock - n WHERE stock >= n
+    VR->>DB: INSERT INTO detalle_venta
+  end
+  VR->>DB: COMMIT
+  VR-->>S: venta con id
+  opt algún producto quedó con stock bajo
+    S->>N: alertarStockBajo(producto)
+  end
+  S->>VR: obtenerPorId(id)
+  VR-->>S: Venta con vendedor y detalles
+  S-->>RT: VentaDTO
+  RT-->>UI: 201 Created + JSON
+  UI-->>U: "Venta registrada. Total: ..."

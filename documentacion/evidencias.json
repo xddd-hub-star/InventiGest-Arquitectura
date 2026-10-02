@@ -1,0 +1,273 @@
+{
+  "alertasStockBajo": [
+    "P-003"
+  ],
+  "pasos": [
+    {
+      "titulo": "Inicio de sesión correcto",
+      "metodo": "POST",
+      "ruta": "/api/auth/login",
+      "cuerpo": {
+        "email": "admin@inventigest.local",
+        "password": "Admin123!"
+      },
+      "estado": 200,
+      "respuesta": {
+        "token": "<jwt>",
+        "usuario": {
+          "id": 1,
+          "nombre": "Ragami Perez",
+          "email": "admin@inventigest.local",
+          "rol": "admin"
+        }
+      }
+    },
+    {
+      "titulo": "Inicio de sesión con contraseña incorrecta",
+      "metodo": "POST",
+      "ruta": "/api/auth/login",
+      "cuerpo": {
+        "email": "admin@inventigest.local",
+        "password": "incorrecta"
+      },
+      "estado": 401,
+      "respuesta": {
+        "error": "Correo o contraseña incorrectos."
+      }
+    },
+    {
+      "titulo": "CU1 · Registrar producto (caso correcto)",
+      "metodo": "POST",
+      "ruta": "/api/productos",
+      "cuerpo": {
+        "codigo": "P-100",
+        "nombre": "Audífonos",
+        "precio": 25.5,
+        "stock": 12,
+        "stockMinimo": 5
+      },
+      "estado": 201,
+      "respuesta": {
+        "id": 6,
+        "codigo": "P-100",
+        "nombre": "Audífonos",
+        "precio": 25.5,
+        "stock": 12,
+        "stockMinimo": 5,
+        "stockBajo": false
+      }
+    },
+    {
+      "titulo": "CU1 · Registrar producto con precio = -50 (regla de negocio)",
+      "metodo": "POST",
+      "ruta": "/api/productos",
+      "cuerpo": {
+        "codigo": "P-101",
+        "nombre": "Producto inválido",
+        "precio": -50,
+        "stock": 1
+      },
+      "estado": 400,
+      "respuesta": {
+        "error": "El precio debe ser mayor que cero."
+      }
+    },
+    {
+      "titulo": "CU1 · Registrar producto con código repetido",
+      "metodo": "POST",
+      "ruta": "/api/productos",
+      "cuerpo": {
+        "codigo": "P-001",
+        "nombre": "Duplicado",
+        "precio": 10,
+        "stock": 1
+      },
+      "estado": 409,
+      "respuesta": {
+        "error": "Ya existe un producto con el código \"P-001\"."
+      }
+    },
+    {
+      "titulo": "Control de roles: un vendedor intenta registrar un producto",
+      "metodo": "POST",
+      "ruta": "/api/productos",
+      "cuerpo": {
+        "codigo": "P-102",
+        "nombre": "No permitido",
+        "precio": 10,
+        "stock": 1
+      },
+      "estado": 403,
+      "respuesta": {
+        "error": "No tiene permisos para esta operación."
+      }
+    },
+    {
+      "titulo": "CU2 · Consultar productos (búsqueda \"mouse\")",
+      "metodo": "GET",
+      "ruta": "/api/productos?busqueda=mouse",
+      "cuerpo": null,
+      "estado": 200,
+      "respuesta": [
+        {
+          "id": 2,
+          "codigo": "P-002",
+          "nombre": "Mouse inalámbrico",
+          "precio": 18.5,
+          "stock": 35,
+          "stockMinimo": 10,
+          "stockBajo": false
+        }
+      ]
+    },
+    {
+      "titulo": "CU3 · Actualizar stock (+10 al producto 4)",
+      "metodo": "PATCH",
+      "ruta": "/api/productos/4/stock",
+      "cuerpo": {
+        "delta": 10
+      },
+      "estado": 200,
+      "respuesta": {
+        "id": 4,
+        "codigo": "P-004",
+        "nombre": "Cable HDMI 2 m",
+        "precio": 6.75,
+        "stock": 110,
+        "stockMinimo": 20,
+        "stockBajo": false
+      }
+    },
+    {
+      "titulo": "CU3 · Actualizar stock dejándolo negativo",
+      "metodo": "PATCH",
+      "ruta": "/api/productos/4/stock",
+      "cuerpo": {
+        "delta": -100000
+      },
+      "estado": 409,
+      "respuesta": {
+        "error": "Stock insuficiente para \"Cable HDMI 2 m\": disponible 110, solicitado 100000."
+      }
+    },
+    {
+      "titulo": "CU4 · Registrar venta con descuento por volumen (6 monitores)",
+      "metodo": "POST",
+      "ruta": "/api/ventas",
+      "cuerpo": {
+        "items": [
+          {
+            "productoId": 3,
+            "cantidad": 6
+          }
+        ]
+      },
+      "estado": 201,
+      "respuesta": {
+        "id": 1,
+        "fecha": "2026-10-02T04:37:16.091Z",
+        "vendedor": "Vendedor Demo",
+        "subtotal": 1080,
+        "descuento": 54,
+        "total": 1026,
+        "detalles": [
+          {
+            "productoId": 3,
+            "codigo": "P-003",
+            "nombre": "Monitor 24 pulgadas",
+            "cantidad": 6,
+            "precioUnitario": 180,
+            "subtotal": 1080
+          }
+        ]
+      }
+    },
+    {
+      "titulo": "CU4 · Registrar venta con stock insuficiente (se revierte completa)",
+      "metodo": "POST",
+      "ruta": "/api/ventas",
+      "cuerpo": {
+        "items": [
+          {
+            "productoId": 2,
+            "cantidad": 1
+          },
+          {
+            "productoId": 5,
+            "cantidad": 999
+          }
+        ]
+      },
+      "estado": 409,
+      "respuesta": {
+        "error": "Stock insuficiente para \"Memoria USB 64 GB\": disponible 4, solicitado 999."
+      }
+    },
+    {
+      "titulo": "Persistencia: el stock del mouse no cambió tras la venta fallida",
+      "metodo": "GET",
+      "ruta": "/api/productos/2",
+      "cuerpo": null,
+      "estado": 200,
+      "respuesta": {
+        "id": 2,
+        "codigo": "P-002",
+        "nombre": "Mouse inalámbrico",
+        "precio": 18.5,
+        "stock": 35,
+        "stockMinimo": 10,
+        "stockBajo": false
+      }
+    },
+    {
+      "titulo": "CU5 · Consultar ventas",
+      "metodo": "GET",
+      "ruta": "/api/ventas",
+      "cuerpo": null,
+      "estado": 200,
+      "respuesta": [
+        {
+          "id": 1,
+          "fecha": "2026-10-02T04:37:16.091Z",
+          "vendedor": "Vendedor Demo",
+          "subtotal": 1080,
+          "descuento": 54,
+          "total": 1026,
+          "detalles": []
+        }
+      ]
+    },
+    {
+      "titulo": "Reporte de resumen (admin)",
+      "metodo": "GET",
+      "ruta": "/api/reportes/resumen",
+      "cuerpo": null,
+      "estado": 200,
+      "respuesta": {
+        "cantidadVentas": 1,
+        "totalVendido": 1026,
+        "totalDescuentos": 54,
+        "productosStockBajo": [
+          {
+            "id": 3,
+            "codigo": "P-003",
+            "nombre": "Monitor 24 pulgadas",
+            "precio": 180,
+            "stock": 2,
+            "stockMinimo": 3,
+            "stockBajo": true
+          },
+          {
+            "id": 5,
+            "codigo": "P-005",
+            "nombre": "Memoria USB 64 GB",
+            "precio": 12,
+            "stock": 4,
+            "stockMinimo": 5,
+            "stockBajo": true
+          }
+        ]
+      }
+    }
+  ]
+}

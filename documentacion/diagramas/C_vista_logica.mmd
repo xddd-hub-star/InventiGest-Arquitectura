@@ -1,0 +1,106 @@
+classDiagram
+
+  class ServicioVenta {
+    +registrarVenta(usuarioId, cuerpo)
+    +consultarVentas(consulta)
+    +obtenerVenta(id)
+  }
+  class ServicioInventario {
+    +registrarProducto(cuerpo)
+    +consultarProductos(filtro)
+    +obtenerProducto(id)
+    +actualizarStock(id, delta)
+  }
+  class ServicioAutenticacion {
+    +login(email, password)
+    +verificarToken(token)
+  }
+  class ServicioReportes {
+    +resumen(consulta)
+  }
+
+  class Producto {
+    -id
+    -codigo
+    -nombre
+    -precio
+    -stock
+    -stockMinimo
+    +descontarStock(cantidad)
+    +ajustarStock(delta)
+    +tieneStockBajo()
+  }
+  class Venta {
+    +usuarioId
+    +subtotal
+    +descuento
+    +total
+    +crear(usuarioId, lineas)$
+  }
+  class DetalleVenta {
+    +productoId
+    +cantidad
+    +precioUnitario
+    +subtotal
+  }
+  class Usuario {
+    +nombre
+    +email
+    +rol
+    +esAdmin()
+  }
+  class ReglasStock {
+    +validarDisponibilidad(producto, cantidad)$
+    +esStockBajo(producto)$
+  }
+  class ReglasVenta {
+    +consolidarItems(items)$
+    +calcularTotales(subtotales)$
+  }
+
+  class IProductoRepository {
+    <<interface>>
+  }
+  class IVentaRepository {
+    <<interface>>
+  }
+  class IUsuarioRepository {
+    <<interface>>
+  }
+  class INotificacionService {
+    <<interface>>
+  }
+  class IAutenticador {
+    <<interface>>
+  }
+
+  class ProductoRepository
+  class VentaRepository
+  class UsuarioRepository
+  class Notificador
+  class AuthService
+
+  ServicioVenta --> IVentaRepository
+  ServicioVenta --> IProductoRepository
+  ServicioVenta --> INotificacionService
+  ServicioVenta ..> Venta : crea
+  ServicioVenta ..> ReglasVenta
+  ServicioInventario --> IProductoRepository
+  ServicioInventario --> INotificacionService
+  ServicioInventario ..> Producto
+  ServicioAutenticacion --> IUsuarioRepository
+  ServicioAutenticacion --> IAutenticador
+  ServicioReportes --> IVentaRepository
+  ServicioReportes --> IProductoRepository
+
+  Venta "1" *-- "1..*" DetalleVenta
+  Venta ..> ReglasStock
+  Venta ..> ReglasVenta
+  Producto ..> ReglasStock
+  IUsuarioRepository ..> Usuario
+
+  IProductoRepository <|.. ProductoRepository
+  IVentaRepository <|.. VentaRepository
+  IUsuarioRepository <|.. UsuarioRepository
+  INotificacionService <|.. Notificador
+  IAutenticador <|.. AuthService

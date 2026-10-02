@@ -1,0 +1,37 @@
+erDiagram
+  usuarios ||--o{ ventas : registra
+  ventas ||--|{ detalle_venta : contiene
+  productos ||--o{ detalle_venta : "se vende en"
+
+  usuarios {
+    int id PK
+    varchar nombre
+    varchar email UK
+    varchar password_hash
+    varchar rol "admin o vendedor"
+  }
+  productos {
+    int id PK
+    varchar codigo UK
+    varchar nombre
+    numeric precio "mayor que 0"
+    int stock "no negativo"
+    int stock_minimo
+    boolean activo
+  }
+  ventas {
+    int id PK
+    int usuario_id FK
+    timestamptz fecha
+    numeric subtotal
+    numeric descuento
+    numeric total
+  }
+  detalle_venta {
+    int id PK
+    int venta_id FK
+    int producto_id FK
+    int cantidad "mayor que 0"
+    numeric precio_unitario
+    numeric subtotal
+  }
